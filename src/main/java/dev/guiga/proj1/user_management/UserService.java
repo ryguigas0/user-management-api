@@ -11,6 +11,7 @@ import dev.guiga.proj1.user_management.exceptions.DuplicateUsernameException;
 import dev.guiga.proj1.user_management.exceptions.MaxLoginsException;
 import dev.guiga.proj1.user_management.exceptions.UsernameInvalidPassword;
 import dev.guiga.proj1.user_management.exceptions.UsernameNotFound;
+import dev.guiga.proj1.user_management.transfer.UserChangePasswordInTO;
 import dev.guiga.proj1.user_management.transfer.UserInTO;
 import dev.guiga.proj1.user_management.transfer.UserOutTO;
 import dev.guiga.proj1.user_management.transfer.UserParser;
@@ -32,11 +33,10 @@ public class UserService {
         }
     }
 
-    public List<UserOutTO> listUsers() {
-
+    public List<UserOutTO> listUsers(boolean blocked) {
         List<UserOutTO> output = new ArrayList<UserOutTO>();
 
-        repo.findAll().forEach(userModel -> output.add(UserParser.from(userModel)));
+        repo.findAllByBlocked(blocked).forEach(userModel -> output.add(UserParser.from(userModel)));
 
         return output;
     }
@@ -47,7 +47,6 @@ public class UserService {
         if (userFound == null) {
             throw new UsernameNotFound(userIn.username());
         }
-        
 
         if (!userFound.getPassword().equals(userIn.password())) {
             int totalFailed = userFound.getTotalFailedLogins() + 1;
@@ -71,6 +70,24 @@ public class UserService {
 
         userFound.setTotalLogins(totalLogins);
 
+        repo.save(userFound);
+
+        return UserParser.from(userFound);
+    }
+
+    public UserOutTO changeUserPassword(UserChangePasswordInTO userIn) {
+        User userFound = repo.findByUsername(userIn.username());
+
+        if (userFound == null) {
+            throw new UsernameNotFound(userIn.username());
+        }
+
+        if (!userFound.getPassword().equals(userIn.oldPassword())) {
+            throw new UsernameInvalidPassword(userIn.username());
+        }
+
+        userFound.setPassword(userIn.newPassword());
+        userFound.setTotalLogins(0);
         repo.save(userFound);
 
         return UserParser.from(userFound);

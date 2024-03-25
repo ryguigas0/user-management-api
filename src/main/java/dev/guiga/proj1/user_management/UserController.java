@@ -2,6 +2,8 @@ package dev.guiga.proj1.user_management;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import dev.guiga.proj1.user_management.transfer.UserChangePasswordInTO;
 import dev.guiga.proj1.user_management.transfer.UserInTO;
 import dev.guiga.proj1.user_management.transfer.UserOutTO;
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+
 
 @RestController
 @RequestMapping("/users")
@@ -30,9 +33,14 @@ public class UserController {
         return service.loginUser(userIn);
     }
 
-    @GetMapping("/")
+    @PutMapping("change-password")
+    public UserOutTO changeUserPassword(@RequestBody @Valid UserChangePasswordInTO userIn) {
+        return service.changeUserPassword(userIn);
+    }
+
+    @GetMapping("/blocked")
     public List<UserOutTO> listUsers() {
-        return service.listUsers();
+        return service.listUsers(true);
     }
 
 }
