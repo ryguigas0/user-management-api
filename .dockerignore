@@ -1,0 +1,7 @@
+.git
+.gitignore
+.vscode
+docker-compose*
+Dockerfile*
+README
+mvnw.cmd
