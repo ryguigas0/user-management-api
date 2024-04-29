@@ -9,13 +9,12 @@ import dev.guiga.proj1.user_management.transfer.UserOutTO;
 import jakarta.validation.Valid;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/users")
@@ -33,7 +32,7 @@ public class UserController {
         return service.loginUser(userIn);
     }
 
-    @PutMapping("change-password")
+    @PutMapping("/change-password")
     public UserOutTO changeUserPassword(@RequestBody @Valid UserChangePasswordInTO userIn) {
         return service.changeUserPassword(userIn);
     }
@@ -41,6 +40,11 @@ public class UserController {
     @GetMapping("/blocked")
     public List<UserOutTO> listUsers() {
         return service.listUsers(true);
+    }
+
+    @PutMapping("/unblock/{username}")
+    public UserOutTO unblockUser(@PathVariable String username) {
+        return service.unblockUser(username);
     }
 
 }
