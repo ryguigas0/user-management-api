@@ -25,7 +25,7 @@ public class UserService {
 
     public UserOutTO createUser(UserInTO userIn) {
         try {
-            User savedUser = repo.save(UserParser.from(userIn));
+            UserModel savedUser = repo.save(UserParser.from(userIn));
 
             return UserParser.from(savedUser);
         } catch (DataIntegrityViolationException e) {
@@ -42,7 +42,7 @@ public class UserService {
     }
 
     public UserOutTO loginUser(@Valid UserInTO userIn) {
-        User userFound = repo.findByUsername(userIn.username());
+        UserModel userFound = repo.findByUsername(userIn.username());
 
         if (userFound == null) {
             throw new UsernameNotFound(userIn.username());
@@ -76,7 +76,7 @@ public class UserService {
     }
 
     public UserOutTO changeUserPassword(UserChangePasswordInTO userIn) {
-        User userFound = repo.findByUsername(userIn.username());
+        UserModel userFound = repo.findByUsername(userIn.username());
 
         if (userFound == null) {
             throw new UsernameNotFound(userIn.username());

@@ -1,16 +1,16 @@
 package dev.guiga.proj1.user_management.transfer;
 
-import dev.guiga.proj1.user_management.User;
+import dev.guiga.proj1.user_management.UserModel;
 
 public class UserParser {
-    public static User from(UserInTO userIn) {
-        return User.builder()
+    public static UserModel from(UserInTO userIn) {
+        return UserModel.builder()
                 .username(userIn.username())
                 .password(userIn.password())
                 .build();
     }
 
-    public static UserOutTO from(User user) {
+    public static UserOutTO from(UserModel user) {
         return new UserOutTO(user.getId(), user.getUsername(), user.isBlocked());
     }
 }

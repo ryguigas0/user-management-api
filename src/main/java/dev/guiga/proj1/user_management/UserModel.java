@@ -20,7 +20,7 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity(name = "users")
-public class User {
+public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
