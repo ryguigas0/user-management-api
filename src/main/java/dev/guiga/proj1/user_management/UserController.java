@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.guiga.proj1.user_management.transfer.UserChangePasswordInTO;
 import dev.guiga.proj1.user_management.transfer.UserInTO;
 import dev.guiga.proj1.user_management.transfer.UserOutTO;
+import dev.guiga.proj1.user_management.transfer.UserTokenOutTO;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class UserController {
     }
 
     @PutMapping("/login")
-    public UserOutTO loginUser(@RequestBody @Valid UserInTO userIn) {
+    public UserTokenOutTO loginUser(@RequestBody @Valid UserInTO userIn) {
         return service.loginUser(userIn);
     }
 
