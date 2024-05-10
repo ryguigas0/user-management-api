@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface UserRepo extends CrudRepository<UserModel, Integer> {
     UserModel findByUsername(String username);
 
-    List<UserModel> findAllByBlocked(boolean blocked);
+    List<UserModel> findByBlocked(boolean blocked);
 }

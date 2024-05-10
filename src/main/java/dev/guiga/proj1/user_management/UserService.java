@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.nimbusds.jose.shaded.gson.Gson;
 import dev.guiga.proj1.user_management.exceptions.DuplicateUsernameException;
 import dev.guiga.proj1.user_management.exceptions.MaxLoginsException;
+import dev.guiga.proj1.user_management.exceptions.UserBlockedException;
 import dev.guiga.proj1.user_management.exceptions.UsernameInvalidPassword;
 import dev.guiga.proj1.user_management.exceptions.UsernameNotFound;
 import dev.guiga.proj1.user_management.transfer.UserChangePasswordInTO;
@@ -56,7 +57,9 @@ public class UserService {
     public List<UserOutTO> listUsers(boolean blocked) {
         List<UserOutTO> output = new ArrayList<UserOutTO>();
 
-        repo.findAllByBlocked(blocked).forEach(userModel -> output.add(UserParser.from(userModel)));
+        List<UserModel> temp = repo.findByBlocked(blocked);
+
+        temp.forEach(userModel -> output.add(UserParser.from(userModel)));
 
         return output;
     }
@@ -64,18 +67,19 @@ public class UserService {
     public UserTokenOutTO loginUser(@Valid UserInTO userIn) {
         UserModel userFound = getUser(userIn.username());
 
+        if (userFound.isBlocked())
+            throw new UserBlockedException();
+
         if (!userFound.getPassword().equals(userIn.password())) {
-            int totalFailed = userFound.getTotalFailedLogins() + 1;
-
-            userFound.setTotalFailedLogins(totalFailed);
-
-            if (totalFailed > 5) {
-                userFound.setBlocked(true);
-            }
-
-            repo.save(userFound);
-
+            failLogin(userFound);
             throw new UsernameInvalidPassword(userIn.username());
+        }
+
+        String token = getToken(userFound);
+
+        if (token == null) {
+            failLogin(userFound);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account not authorized to generate token!");
         }
 
         int totalLogins = userFound.getTotalLogins() + 1;
@@ -88,9 +92,19 @@ public class UserService {
 
         repo.save(userFound);
 
-        String token = getToken(userFound);
-
         return new UserTokenOutTO(token);
+    }
+
+    private void failLogin(UserModel user) {
+        int totalFailed = user.getTotalFailedLogins() + 1;
+
+        user.setTotalFailedLogins(totalFailed);
+
+        if (totalFailed > 5) {
+            user.setBlocked(true);
+        }
+
+        repo.save(user);
     }
 
     private String getToken(UserModel user) {
@@ -115,7 +129,7 @@ public class UserService {
 
             return jsonMap.get("access_token");
         } catch (HttpClientErrorException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account not authorized to generate token!");
+            return null;
         }
 
     }
