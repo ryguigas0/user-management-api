@@ -1,0 +1,106 @@
+{
+  "info": {
+    "name": "User Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "blocked users",
+      "event": [],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{url}}/users/blocked"
+      }
+    },
+    {
+      "name": "change password",
+      "event": [],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{url}}/users/change-password",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"MhwKKXKDXMcjt4vR85OIS\",\n  \"oldPassword\": \"default123\",\n  \"newPassword\": \"default456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "login user",
+      "event": [],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{url}}/users/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"BSPCCFeULNonURRzzpTu5\",\n  \"password\": \"default123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "new user",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "var { nanoid } = require(\"nanoid\");",
+              "var _ = require(\"lodash\");",
+              "",
+              "req.setBody({",
+              "  \"username\": nanoid(),",
+              "  \"password\": \"default123\"",
+              "})"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/users/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"Teste\",\n  \"password\": \"123456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "unlock user",
+      "event": [],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{url}}/users/unblock/cy1ue1swvF6fA4mLPTwfm"
+      }
+    },
+    {
+      "name": "bruno",
+      "event": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "url",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
