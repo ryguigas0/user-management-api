@@ -2,11 +2,6 @@ version: '3.8'
 name: 'user-management-compose'
 
 services:
-  eureka:
-    container_name: 'eureka'
-    build: ../user_management_eureka/
-    ports:
-      - "8761:8761"
   keycloak:
     container_name: 'keycloak'
     image: quay.io/keycloak/keycloak
@@ -21,15 +16,23 @@ services:
     container_name: 'zookeeper'
     image: confluentinc/cp-zookeeper:latest
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+      - KAFKA_OPTS=-Dzookeeper.4lw.commands.whitelist=*
     ports:
       - '2181:2181'
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181"]
+      interval: 5s
+      timeout: 5s
+      retries: 7
+      start_period: 10s
   kafka:
     container_name: 'kafka'
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - '29092:29092'
     environment:
@@ -39,6 +42,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep Kafka"]
+      interval: 5s
+      timeout: 5s
+      retries: 7
+      start_period: 10s
   db:
     container_name: 'db'
     image: postgres:16.2-alpine3.19
@@ -48,3 +57,59 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=user_management
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_management"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  eureka:
+    container_name: 'eureka'
+    build: ../user-management-eureka/
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail localhost:8761"]
+      interval: 5s
+      timeout: 5s
+      retries: 7
+      start_period: 30s
+  # history:
+  #   container_name: history
+  #   build: ../user-management-history
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     DATASOURCE_URL: jdbc:postgresql://db:5432/user_management
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #     db:
+  #       condition: service_healthy
+  #     eureka:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl --fail localhost:8081/history/"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 7
+  #     start_period: 15s
+  # api:
+  #   container_name: api
+  #   build: .
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - DATASOURCE_URL=jdbc:postgresql://db:5432/user_management
+  #     - KEYCLOAK_URL=http://keycloak:9090/realms/UserManagement
+  #   depends_on:
+  #     keycloak:
+  #       condition: service_started
+  #     db:
+  #       condition: service_healthy
+  #     eureka:
+  #       condition: service_healthy
+  #     history:
+  #       condition: service_healthy
+  #     kafka:
+  #       condition: service_healthy

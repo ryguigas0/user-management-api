@@ -1,5 +1,8 @@
 FROM openjdk:23-slim
 
+# installing curl for healthcheck
+RUN apt -y update && apt install curl -y
+
 WORKDIR /
 
 COPY pom.xml /pom.xml
