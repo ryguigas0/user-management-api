@@ -20,11 +20,13 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.nimbusds.jose.shaded.gson.Gson;
+
 import dev.guiga.proj1.user_management.exceptions.DuplicateUsernameException;
 import dev.guiga.proj1.user_management.exceptions.MaxLoginsException;
 import dev.guiga.proj1.user_management.exceptions.UserBlockedException;
 import dev.guiga.proj1.user_management.exceptions.UsernameInvalidPassword;
 import dev.guiga.proj1.user_management.exceptions.UsernameNotFound;
+import dev.guiga.proj1.user_management.transfer.FailLoginTO;
 import dev.guiga.proj1.user_management.transfer.UserChangePasswordInTO;
 import dev.guiga.proj1.user_management.transfer.UserInTO;
 import dev.guiga.proj1.user_management.transfer.UserOutTO;
@@ -37,6 +39,9 @@ public class UserService {
 
     @Autowired
     private UserRepo repo;
+
+    @Autowired
+    private FailLoginTopicService failLoginTopic;
 
     @Value("${keycloak.client-id}")
     private String keycloakClientId;
@@ -104,6 +109,8 @@ public class UserService {
             user.setBlocked(true);
         }
 
+        failLoginTopic.send(new FailLoginTO(user.getUsername(), totalFailed));
+
         repo.save(user);
     }
 
@@ -120,9 +127,12 @@ public class UserService {
             requestBody.add("client_id", keycloakClientId);
             requestBody.add("grant_type", "password");
 
+            HttpEntity<?> request = new HttpEntity<>(requestBody, headers);
+
             ResponseEntity<String> response = restTemplate.postForEntity(
                     keycloakUrl + "/protocol/openid-connect/token",
-                    new HttpEntity<>(requestBody, headers), String.class);
+                    request,
+                    String.class);
 
             Gson gson = new Gson();
             Map<String, String> jsonMap = gson.fromJson(response.getBody(), Map.class);
